@@ -1,0 +1,64 @@
+1.
+CREATE OR REPLACE VIEW info_brest AS
+SELECT *
+FROM Branch
+WHERE city='Брест';
+
+2.
+CREATE OR REPLACE VIEW info_min_coast AS
+SELECT *
+FROM Property_for_rent
+WHERE rent IN 
+(
+  SELECT min(rent)
+  FROM Property_for_rent
+);
+
+3.
+CREATE OR REPLACE VIEW info_comments AS
+SELECT COUNT (comment_o) COUNT_COMMENTS
+FROM Viewing;
+
+4.
+CREATE OR REPLACE VIEW three_room AS
+SELECT DISTINCT r.* from Renter r, objects o 
+WHERE o.city = SUBSTR(r.address,0,INSTR(r.address, ' ',1,1)-1) AND o.rooms = 1;
+
+
+5.
+CREATE OR REPLACE VIEW info_biggest_branch AS
+SELECT *
+FROM Branch
+WHERE bno IN 
+( 
+  SELECT bno 
+  FROM Staff
+  GROUP BY bno
+  HAVING COUNT(*)>= ALL(SELECT COUNT(*) FROM staff GROUP BY bno)
+);
+
+6.
+CREATE OR REPLACE VIEW Qurtal
+	AS SELECT DISTINCT staff.fname, staff.lname FROM staff
+	INNER JOIN objects
+	ON objects.bno = staff.bno
+	INNER JOIN viewing
+    ON viewing.pno = objects.pno
+	WHERE TO_CHAR(date_o,'Q') = TO_CHAR(SYSDATE,'Q');
+
+7.
+CREATE OR REPLACE VIEW info_view_7 AS
+SELECT * 
+FROM owner
+WHERE ono IN
+(
+  SELECT DISTINCT ono 
+  FROM property_for_rent
+  WHERE pno IN
+    (
+      SELECT pno
+      FROM viewing
+      GROUP BY pno
+      HAVING COUNT(*)>2
+    )
+);

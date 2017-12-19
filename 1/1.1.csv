@@ -1,0 +1,382 @@
+CREATE TABLE Branch(
+bno INTEGER PRIMARY KEY,
+street VARCHAR2(30),
+city VARCHAR2(20), 
+CONSTRAINT city_ch CHECK(city IN('Grodno','Mogilev')),
+tel_no VARCHAR2(20) );
+
+CREATE TABLE Staff(
+sno INTEGER PRIMARY KEY,
+fname VARCHAR(20),
+lname VARCHAR2(15),
+address VARCHAR2(40),
+tel_no VARCHAR2(50),
+position VARCHAR2(60),
+sex VARCHAR2(6),
+CONSTRAINT sex_ch CHECK(sex IN('male','female')), 
+dob DATE,
+salary INTEGER, 
+bno INTEGER,
+CONSTRAINT staff_branch FOREIGN KEY (bno) REFERENCES Branch); 
+				   
+CREATE TABLE Owner(
+ono INTEGER PRIMARY KEY ,
+fname VARCHAR2(20),
+lname VARCHAR2(20), 
+address VARCHAR2(60),
+tel_no VARCHAR2(30) );				   
+
+CREATE TABLE Property_for_rent(
+pno INTEGER PRIMARY KEY,
+street VARCHAR2(60),
+city VARCHAR2(30),
+types VARCHAR2(1),
+CONSTRAINT types_ch CHECK(types IN('h','f')),
+rooms INTEGER,
+rent INTEGER,
+ono INTEGER,
+sno INTEGER,
+bno INTEGER,
+CONSTRAINT rent_owner FOREIGN KEY (ono) REFERENCES Owner,
+CONSTRAINT rent_staff FOREIGN KEY (sno) REFERENCES Staff,
+CONSTRAINT rent_branch FOREIGN KEY (bno) REFERENCES Branch);
+
+CREATE TABLE Renter(
+rno INTEGER PRIMARY KEY,
+fname VARCHAR2(20),
+lname VARCHAR2(20), 
+address VARCHAR2(60),
+tel_no VARCHAR2(30),
+pref_type VARCHAR2(1),
+CONSTRAINT pref_type_ch CHECK(pref_type IN('h','f')),
+max_rent INTEGER,
+bno INTEGER,
+CONSTRAINT renter_branch FOREIGN KEY (bno) REFERENCES Branch );
+
+CREATE TABLE Viewing(
+rno INTEGER,
+pno INTEGER,
+CONSTRAINT frn_key_for_renter FOREIGN KEY (rno) REFERENCES Renter,
+CONSTRAINT frn_key_for_property FOREIGN KEY (pno) REFERENCES Property_for_rent,
+CONSTRAINT pr_keys PRIMARY KEY(rno, pno),
+date_o DATE,
+comment_o LONG);
+					 
+CREATE SYNONYM objects
+FOR Property_for_rent;
+
+INSERT INTO Branch (bno,street,city,tel_no) values (1,'Gikalo', 'Grodno', '12-12-12');
+INSERT INTO Branch (bno,street,city,tel_no) values (2,'Pdadad', 'Grodno', '21-12-21');
+INSERT INTO Branch (bno,street,city,tel_no) values (3,'Qwerty', 'Mogilev', '32-24-32');
+
+CREATE SEQUENCE Staff_seq INCREMENT BY 5 START WITH 10;
+
+INSERT INTO Staff (sno,fname,lname,address,tel_no,position,sex,dob,salary,bno) values (1,'Petrov','Ivan','Loshicha 45','126745','director','male','12-12-2004','400',2);
+INSERT INTO Staff (sno,fname,lname,address,tel_no,position,sex,dob,salary,bno) values (2,'Ivanov','Pavel','Loshicha 47','12-27-45','tester','male','12-12-2006','300',3);
+INSERT INTO Staff (sno,fname,lname,address,tel_no,position,sex,dob,salary,bno) values (3,'Strizhikova','Alesya','Loshicha 49','12-97-45','SQL programmer','female','13-12-2004','500',1);
+INSERT INTO Staff (sno,fname,lname,address,tel_no,position,sex,dob,salary,bno) values (Staff_seq.NEXTVAL,'Milchman','Alex','Platonova 39','123-97-45','C programmer','male','20-06-2008','1500',3);
+INSERT INTO Staff (sno,fname,lname,address,tel_no,position,sex,dob,salary,bno) values (Staff_seq.NEXTVAL,'Strizhikova','Alesya','Loshicha 49','12-97-45','C++ programmer','male','13-02-1970','540',2);
+INSERT INTO Staff (sno,fname,lname,address,tel_no,position,sex,dob,salary,bno) values (Staff_seq.NEXTVAL,'Panova','Masha','Zhigylova','13-07-47','Java programmer','female','23-02-2014','800',2);
+
+INSERT INTO objects (pno,street,city,rooms,rent,ono,sno,bno) values (1,'Poreshnaya','Novosibirsk','2','30000',3,2,2);
+INSERT INTO objects (pno,street,city,rooms,rent,ono,sno,bno) values (2,'Zhniva','Grodno','4','10000',3,3,2);
+INSERT INTO objects (pno,street,city,rooms,rent,ono,sno,bno) values (3,'Platonova','Minsk','1','5000',1,2,2);
+
+INSERT INTO Renter (rno,fname,lname,address,tel_no,pref_type,max_rent,bno) values (1,'Bobko','Valeria','Lososeva 90','34-76-87','h','20000',2);
+INSERT INTO Renter (rno,fname,lname,address,tel_no,pref_type,max_rent,bno) values (2,'Prishcep','Pasha','Gvineya 23','35-76-87','f','20000',3);
+INSERT INTO Renter (rno,fname,lname,address,tel_no,pref_type,max_rent,bno) values (3,'Malysh','Lesha','Molokososnaya','94-76-87','h','10000',1);
+
+INSERT INTO Owner (ono,fname,lname,address,tel_no) values (1,'Churakov','Vasya','Dzerzhinskava 95','76-98-87');
+INSERT INTO Owner (ono,fname,lname,address,tel_no) values (2,'Myshkovets','Sasha','Nowy Mir 7','79-98-87');
+INSERT INTO Owner (ono,fname,lname,address,tel_no) values (3,'Selevkovich','Alesha','Drogichinskaya 94','7341971');
+
+INSERT INTO Viewing (rno,pno,date_o,comment_o) values (1,1,'11-12-2017','lalalalala');
+INSERT INTO Viewing (rno,pno,date_o,comment_o) values (1,2,'03-06-2017','need a doctor');
+INSERT INTO Viewing (rno,pno,date_o,comment_o) values (2,1,'11-11-2010','inra itra');
+INSERT INTO Viewing (rno,pno,date_o,comment_o) values (2,1,'11-11-2010','inra itra');
+
+SELECT COUNT(rno), COUNT(pno) FROM Viewing WHERE date_o BETWEEN '31.12.2016' and '01.01.2018';
+
+SELECT fname, lname, position, S.tel_no 
+FROM objects O, Staff S 
+WHERE O.pno=S.bno and city = ‘Минск’;
+
+
+SELECT COUNT (rno), COUNT (pno) FROM Viewing WHERE date_o BETWEEN '31.12.2016' AND '01.01.2018';
+
+SELECT fname, lname, position, tel_no FROM Staff WHERE bno IN (SELECT bno FROM Branch WHERE city= 'Minsk') ;
+
+SELECT city, SUM(rent) FROM objects GROUP BY city HAVING (city='Minsk' OR city='Grodno');
+
+SELECT * FROM owner WHERE ono IN(SELECT ono FROM (SELECT ono, rent FROM objects WHERE (ono!=1 AND rent>(SELECT MIN(rent) FROM objects WHERE ono=1))) GROUP BY ono);
+
+
+
+------------------
+
+Create table Workers(workers INTEGER PRIMARY KEY,
+fname VARCHAR(20),
+lname VARCHAR(15),
+email VARCHAR2(30) unique,
+tel_no VARCHAR2(30) unique, 
+experience integer);
++
+
+Create table Suppliers(suppliers integer primary key,
+firm_name varchar2(30), 
+country varchar2(30) check (country != 'China'));
++
+
+Create table Clients(cl integer primary key,
+fname varchar2(30),
+lname varchar2(30), 
+firm_name varchar2(30),
+tel_no varchar2(30) unique);
++
+
+Create table HLM(hlm integer primary key,
+title varchar2(40), 
+destiny integer, 
+price integer,
+total_capacity integer default 500);
++
+
+Create table Waybills(wb integer,
+hlm integer,
+total_price integer not null,
+wb_date date default sysdate,
+suppliers integer,
+workers integer, 
+wb_capacity integer,
+constraint wb_hlm foreign key (hlm) references HLM,
+constraint wb_sup foreign key (suppliers) references Suppliers,
+constraint wb_work foreign key (workers) references Workers,
+constraint pr_keys2 primary key (wb, hlm));
++
+
+Create table Sale(sale integer,
+hlm integer,
+sale_date date default sysdate,
+sale_capacity integer,
+cl integer,
+workers integer,
+constraint cl_sale foreign key (cl) references Clients,
+constraint workers_sale foreign key (workers) references Workers,
+constraint pr_keys3 primary key(sale, hlm));
++
+
+---------------
+Insert into Workers (workers, fname, lname, email, tel_no, experience) values (1,'Zybrov','Gore', 'pygalo@gmail.com','283-54-64',2);
+Insert into Workers (workers, fname, lname, email, tel_no, experience) values (2,'Makarov','Ivan','youtubegod@gmail.com','325-53-63',4);
+Insert into Workers (workers, fname, lname, email, tel_no, experience) values (3,'Sved','Vlad', 'nebolei@gmail.com','543-59-69',1);
+Insert into Workers (workers, fname, lname, email, tel_no, experience) values (4,'Polia','Rybel', 'devyshka_kosti@gmail.com','435-35-75',3);
+
+
+Insert into Suppliers (suppliers, firm_name, country) values (1, 'Bush Emir', 'Turkmenistan');
+Insert into Suppliers (suppliers, firm_name, country) values (2, 'TeamBuild', 'Russia');
+Insert into Suppliers (suppliers, firm_name, country) values (3, 'IOL Trans', 'Russia');
+Insert into Suppliers (suppliers, firm_name, country) values (4, 'GazMiaz', 'Ukraine');
+
+Insert into Clients (cl, fname, lname, firm_name, tel_no) values (1, 'Aleshkin','Evgen','CleverTechnologies','142-19-39');
+Insert into Clients (cl, fname, lname, firm_name, tel_no) values (2, 'Shpilich','Danichka','StudsovetFITC','007-07-08');
+Insert into Clients (cl, fname, lname, firm_name, tel_no) values (3, 'Shelestak','Pavel','DriverSolutions','773-37-70');
+
+Insert into HLM (hlm, title, destiny, price, total_capacity) values (1, 'Hydraulic oil',0.9, 1000, 3000);
+Insert into HLM (hlm, title, destiny, price, total_capacity) values (2, 'Gear oil',0.92, 3000, 600);
+Insert into HLM (hlm, title, destiny, price, total_capacity) values (3, 'Turbine oil',0.87, 5000, 10000);
+Insert into HLM (hlm, title, destiny, price, total_capacity) values (4, 'Diesel',1.0, 10000, 80000);
+
+Insert into Waybills (wb, hlm, total_price, wb_date, workers, suppliers, wb_capacity) values (1, 1, 13450,'11-11-1996',2, 2, 5700);
+Insert into Waybills (wb, hlm, total_price, wb_date, workers, suppliers, wb_capacity) values (2, 1, 3450,'01-12-1998',1, 3, 7700);
+Insert into Waybills (wb, hlm, total_price, wb_date, workers, suppliers, wb_capacity) values (3, 4, 4180,'12-01-1999',3, 1, 6000);
+Insert into Waybills (wb, hlm, total_price, wb_date, workers, suppliers, wb_capacity) values (4, 3, 5322,'01-12-2017',1, 2, 10000);
+Insert into Waybills (wb, hlm, total_price, wb_date, workers, suppliers, wb_capacity) values (5, 3, 5342,'04-12-2017',1, 3, 11000);
+Insert into Waybills (wb, hlm, total_price, wb_date, workers, suppliers, wb_capacity) values (6, 4, 6567,'04-11-2017',2, 4, 15000);
+
+Insert into Sale (sale, hlm, sale_date, sale_capacity, cl, workers) values (1, 1, '12-05-2016' , 500, 1, 3);
+Insert into Sale (sale, hlm, sale_date, sale_capacity, cl, workers) values (1, 3, '17-04-2017' ,300, 2, 1);
+Insert into Sale (sale, hlm, sale_date, sale_capacity, cl, workers) values (2, 2, '30-06-2014' ,570, 3, 3);
+++++++
+
+---------------
+2.
+
+1)SELECT Waybills.*
+FROM HLM JOIN Waybills ON HLM.hlm = Waybills.hlm
+WHERE HLM.title='Diesel';
+
+2)SELECT HLM.title, Sum(Waybills.total_price) "Sum - sale_capacity"
+FROM HLM JOIN Waybills ON HLM.hlm = Waybills.hlm
+GROUP BY HLM.title;
+
+3)SELECT Suppliers.firm_name, HLM.title, Waybills.total_price
+FROM Suppliers 	
+JOIN (HLM JOIN Waybills ON HLM.hlm = Waybills.hlm) ON Suppliers.suppliers = Waybills.suppliers
+WHERE HLM.title='Hydraulic oil' AND Waybills.total_price<&total_price;
+
+4)SELECT Suppliers.firm_name
+FROM Suppliers
+UNION SELECT HLM.title
+FROM HLM;
+-
+
+5)SELECT workers, COUNT (workers), TO_CHAR (wb_date,'MM.YYYY')
+FROM waybills  
+WHERE TO_CHAR (wb_date,'MM.YYYY') = TO_CHAR(SYSDATE, 'MM') || '.' || to_char (SYSDATE, 'YYYY')
+GROUP BY TO_CHAR (wb_date,'MM.YYYY'), workers;
+
+6)SELECT * FROM Suppliers 
+JOIN Waybills USING (suppliers);
+
+7)SELECT * FROM Suppliers 
+FULL JOIN Waybills ON Suppliers.suppliers = Waybills.suppliers;
+
+8)SELECT fname, lname, email FROM Workers WHERE workers IN (SELECT workers FROM Sale WHERE experience > 1);
+
+9)SELECT * FROM workers WHERE experience >= ALL (SELECT experience FROM workers);
+
+10)SELECT * FROM Workers W WHERE NOT EXISTS( SELECT * FROM Waybills WHERE W.workers = Waybills.workers);
+
+-------------------
+3.
+
+1)Горизонтальное:
+CREATE OR REPLACE VIEW Workers AS
+SELECT * FROM workers
+WHERE experience >= ALL (SELECT experience FROM workers);
+
+2)Вертикальное:
+CREATE OR REPLACE VIEW info AS
+SELECT firm_name FROM Suppliers;
+
+3)'WITH CHECK OPTION':
+CREATE OR REPLACE VIEW Workers2 AS
+SELECT * FROM HLM WHERE TITLE='Diesel'
+WITH CHECK OPTION CONSTRAINT "only_diesel";
+
+
+4)CREATE OR REPLACE VIEW info AS
+SELECT * FROM Sale
+WHERE TO_CHAR(SYSDATE,'D') <6 AND TO_CHAR(SYSDATE,'HH24')<17 AND O_CHAR(SYSDATE,'HH24')>8;
+
+-------------------
+4.
+CREATE TABLE Deleting_waybills AS SELECT * FROM Waybills WHERE 1=0;
+
+'Package':
+CREATE OR REPLACE PACKAGE four_lab 
+AS
+	PROCEDURE Delete_supplier (v_name IN VARCHAR, v_country IN VARCHAR);
+	FUNCTION most_popular_by_title RETURN VARCHAR;
+	FUNCTION most_popular_by_id RETURN NUMBER;
+	END four_lab;
+/
+
+CREATE OR REPLACE PACKAGE BODY four_lab IS 
+
+CREATE OR REPLACE PROCEDURE Delete_supplier(v_name IN VARCHAR, v_country IN VARCHAR) IS 
+	v_suppliers Suppliers.suppliers%TYPE;	
+BEGIN
+	SELECT suppliers INTO v_suppliers FROM Suppliers
+	WHERE firm_name = v_name AND v_country = country;
+	
+	IF v_suppliers != 3 THEN
+		INSERT INTO Deleting_waybills
+			SELECT *FROM waybills WHERE suppliers = v_suppliers;
+			
+			DELETE FROM waybills
+			WHERE suppliers = v_suppliers;
+				
+			DELETE FROM suppliers
+			WHERE firm_name = v_name AND country = v_country;
+		ELSE
+		raise_application_error(-20010,'Bad news');
+	END IF;
+	
+	
+EXCEPTION 
+	WHEN no_data_found THEN
+	dbms_output.put_line('There is no such supplier in waybils table');
+END Delete_supplier;
+
+
+
+CREATE OR REPLACE PROCEDURE Delete_supplier(v_suppliers IN NUMBER) IS 
+
+BEGIN
+
+	WHERE suppliers = v_suppliers;
+	
+	IF v_suppliers != 3 THEN
+		INSERT INTO Deleting_waybills
+			SELECT *FROM waybills WHERE suppliers = v_suppliers;
+			
+			DELETE FROM waybills
+			WHERE suppliers = v_suppliers;
+				
+			DELETE FROM suppliers
+			WHERE firm_name = v_name AND country = v_country;
+		ELSE
+		raise_application_error(-20010,'Bad news');
+	END IF;
+	
+	
+EXCEPTION 
+	WHEN no_data_found THEN
+	dbms_output.put_line('There is no such supplier in waybils table');
+END Delete_supplier;
+
+
+
+
+
+FUNCTION most_popular_by_title RETURN VARCHAR IS
+v_title hlm.title%TYPE;
+BEGIN
+
+SELECT title INTO v_title FROM hlm
+WHERE hlm = (
+SELECT hlm FROM sale
+--where sysdate - sale_date < 30
+GROUP BY hlm
+HAVING SUM(sale_capacity) >= ALL (
+SELECT SUM(sale_capacity) FROM sale
+--where sysdate - sale_date < 30
+GROUP BY hlm
+)
+);
+RETURN 'The most popular is: ' || v_title;
+
+END most_popular_by_title;
+
+FUNCTION most_popular_by_id RETURN VARCHAR IS
+v_destiny hlm.destiny%TYPE;
+BEGIN
+
+SELECT destiny INTO v_destiny FROM hlm
+WHERE hlm = (
+SELECT hlm FROM sale
+--where sysdate - sale_date < 30
+GROUP BY hlm
+HAVING SUM(sale_capacity) >= ALL (
+SELECT SUM(sale_capacity) FROM sale
+--where sysdate - sale_date < 30
+GROUP BY hlm
+)
+);
+RETURN 'The most popular is: ' || v_destiny;
+
+END most_popular_by_id;
+END four_lab;
+/
+
+BEGIN
+	dbms_output.put_line(most_popular);
+END;
+/
+
+BEGIN
+	Delete_supplier('GazMiaz', 'Ukraine');
+END;
+/
+----

@@ -1,0 +1,123 @@
+4.
+CREATE TABLE Deleting_waybills AS SELECT * FROM Waybills WHERE 1=0;
+
+'Package':
+CREATE OR REPLACE PACKAGE four_lab 
+AS
+	PROCEDURE Delete_supplier (v_name IN VARCHAR, v_country IN VARCHAR);
+	PROCEDURE Delete_supplier (v_suppliers IN NUMBER);
+	FUNCTION most_popular RETURN VARCHAR;
+	END four_lab;
+/
+
+CREATE OR REPLACE PACKAGE BODY four_lab IS 
+
+PROCEDURE Delete_supplier(v_name IN VARCHAR, v_country IN VARCHAR) IS 
+	v_suppliers Suppliers.suppliers%TYPE;	
+BEGIN
+	SELECT suppliers INTO v_suppliers FROM Suppliers
+	WHERE firm_name = v_name AND v_country = country;
+	
+		INSERT INTO Deleting_waybills
+			SELECT *FROM waybills WHERE suppliers = v_suppliers;
+			
+			DELETE FROM waybills
+			WHERE suppliers = v_suppliers;
+				
+			DELETE FROM suppliers
+			WHERE firm_name = v_name AND country = v_country;
+EXCEPTION 
+	WHEN no_data_found THEN
+	raise_application_error(-20010,'No data found');
+END Delete_supplier;
+
+
+--Overload procedure
+PROCEDURE Delete_supplier(v_suppliers IN NUMBER) IS 
+
+BEGIN
+	
+		INSERT INTO Deleting_waybills
+			SELECT *FROM waybills WHERE suppliers = v_suppliers;
+			
+			DELETE FROM waybills
+			WHERE suppliers = v_suppliers;
+				
+			DELETE FROM suppliers
+			WHERE suppliers = v_suppliers;
+EXCEPTION 
+	WHEN no_data_found THEN
+	raise_application_error(-20010,'No data found');
+END Delete_supplier;
+
+
+
+CREATE OR REPLACE FUNCTION most_popular RETURN VARCHAR IS
+v_title hlm.title%TYPE;
+BEGIN
+
+SELECT title INTO v_title FROM hlm
+WHERE hlm = (
+SELECT hlm FROM sale
+--where sysdate - sale_date < 30
+GROUP BY hlm
+HAVING SUM(sale_capacity) >= ALL (
+SELECT SUM(sale_capacity) FROM sale
+--where sysdate - sale_date < 30
+GROUP BY hlm
+)
+);
+RETURN 'The most popular is: ' || v_title;
+
+END most_popular;
+
+
+
+FUNCTION most_popular(id IN NUMBER) RETURN VARCHAR IS
+v_destiny hlm.destiny%TYPE;
+BEGIN
+
+SELECT destiny INTO v_destiny FROM hlm
+WHERE hlm = (
+SELECT hlm FROM sale
+--where sysdate - sale_date < 30
+GROUP BY hlm
+HAVING SUM(sale_capacity) >= ALL (
+SELECT SUM(sale_capacity) FROM sale
+--where sysdate - sale_date < 30
+GROUP BY hlm
+)
+);
+RETURN 'The most popular is: ' || v_destiny;
+
+END most_popular_by_id;
+END four_lab;
+/
+
+BEGIN
+	Delete_supplier('GazMiaz', 'Russia');
+END;
+/
+
+BEGIN
+	dbms_output.put_line(most_popular_by_title);
+END;
+/
+
+BEGIN
+	Delete_supplier(3);
+END;
+/
+
+-- Start PROCEDURE
+BEGIN
+four_lab.Delete_supplier('GazMiaz', 'Ukraine');
+END;
+/
+-- Start FUNCTION
+BEGIN
+dbms_output.put_line(four_lab.most_popular_by_id);
+END;
+/
+
+----

@@ -1,0 +1,9 @@
+
+SELECT COUNT (rno), COUNT (pno) FROM Viewing WHERE date_o BETWEEN '31.12.2016' AND '01.01.2018';
+
+SELECT fname, lname, position, tel_no FROM Staff WHERE bno IN (SELECT bno FROM Branch WHERE city= 'Minsk') ;
+
+SELECT city, SUM(rent) FROM objects GROUP BY city HAVING (city='Minsk' OR city='Grodno');
+
+SELECT * FROM owner WHERE ono IN(SELECT ono FROM (SELECT ono, rent FROM objects WHERE (ono!=1 AND rent>(SELECT MIN(rent) FROM objects WHERE ono=1))) GROUP BY ono);
+

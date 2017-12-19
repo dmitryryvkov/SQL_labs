@@ -1,0 +1,22 @@
+--Триггер, при изменении цены на ГСМ записывает старые значения
+--во вспомогательную таблицу
+--Указать дату и имя пользователя, который сделал удаление.
+
+CREATE TABLE hlm_price_log
+(
+	hlm INTEGER not null,
+	old_price INTEGER not null,
+	user_name VARCHAR2(30) not null,
+	date_of_changing DATE not null,
+	constraint foreign_hlm_log foreign key (hlm) references HLM
+);
+
+CREATE OR REPLACE TRIGGER hlm_price_update_trigger
+BEFORE UPDATE OF price ON HLM
+FOR EACH ROW
+WHEN ( NOT NEW.price = OLD.price)
+BEGIN
+    INSERT INTO hlm_price_log VALUES (:OLD.hlm, :OLD.price, user, sysdate);
+END hlm_price_update_trigger;
+
+UPDATE HLM set price = 130000 where hlm = 1;

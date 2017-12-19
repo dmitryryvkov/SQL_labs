@@ -1,0 +1,78 @@
+create or replace trigger task1
+before insert on waybills
+for each row
+declare
+hlm_price hlm.price%type;
+v_total_price waybills.total_price%type;
+v_total_capacity hlm.total_capacity%type;
+
+begin
+	begin 
+	select price
+	into hlm_price
+	from hlm
+	where hlm = :new.hlm;
+	
+	exception
+		when no_data_found then
+		dbms_output.put_line('No data found');
+
+	end;
+
+
+begin
+select total_price into v_total_price from waybills
+where waybills.wb = :new.wb and rownum <= 1;
+
+exception
+when no_data_found then
+v_total_price := 0;
+end;
+
+v_total_price := v_total_price + hlm_price;
+
+
+:new.total_price := v_total_price;
+:new.wb_date := sysdate;
+
+update waybills
+set total_price = v_total_price
+where waybills.wb = :new.wb;
+
+--dbms_output.put_line('Total capacity: ' || v_total_capacity);
+
+end;
+/
+
+
+----------
+
+create or replace trigger task2
+before insert on waybills
+for each row
+declare
+hlm_max_capacity hlm.total_capacity%type := 100000;
+v_hlm_total_capacity hlm.total_capacity%type;
+v_new_hlm_capacity hlm.total_capacity%type;
+begin
+select sum(total_capacity)
+into v_hlm_total_capacity
+from hlm;
+
+if v_hlm_total_capacity + :new.wb_capacity > hlm_max_capacity then
+raise_application_error(-20005, 'Not enough space');
+else
+select total_capacity + :new.wb_capacity
+into v_new_hlm_capacity 
+from hlm
+where hlm = :new.hlm;
+
+update hlm
+set total_capacity = v_new_hlm_capacity
+where hlm = :new.hlm;
+end if;
+end;
+/
+
+---
+

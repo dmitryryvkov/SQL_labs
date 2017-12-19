@@ -1,0 +1,23 @@
+CREATE TABLE drop_table_log
+(
+	m_object_name VARCHAR2(30) not null,
+	user_name VARCHAR2(30) not null,
+	date_of_changing DATE not null
+);
+
+CREATE TABLE temp_table
+(
+	temp_table_val CHAR(1)
+)
+
+CREATE OR REPLACE TRIGGER m_drop_table_trigger
+BEFORE DROP OR CREATE OR ALTER ON SCHEMA
+BEGIN
+	IF(MOD(TO_CHAR(sysdate, 'MI'), 2) = 0)
+		THEN INSERT INTO drop_table_log VALUES('DROP OR CREATE OR ALTER', user, sysdate);
+	ELSE
+		RAISE_APPLICATION_ERROR (-20000, 'Cannot drop object');
+	END IF;
+END drop_table_trigger;
+
+ALTER TRIGGER m_drop_table_trigger DISABLE;

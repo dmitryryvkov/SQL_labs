@@ -51,7 +51,7 @@ create or replace trigger task2
 before insert on waybills
 for each row
 declare
-hlm_max_capacity hlm.total_capacity%type := 100000;
+hlm_max_capacity hlm.total_capacity%type := 200000;
 v_hlm_total_capacity hlm.total_capacity%type;
 v_new_hlm_capacity hlm.total_capacity%type;
 begin
@@ -75,4 +75,56 @@ end;
 /
 
 ---
+create table table_task3 (
+suppliers varchar2(20) primary key,
+hlm_capacity number(7),
+total_price number(7)
+);
+
+create or replace trigger task3
+after insert on waybills
+for each row
+declare
+supplier_exist char(1) := 'y';
+table_task3_record table_task3%rowtype;
+v_capacity waybills.wb_capacity%type;
+v_total_price waybills.total_price%type;
+pragma autonomous_transaction;
+
+begin
+select sum(wb_capacity)+ :new.wb_capacity
+into v_capacity
+from waybills
+where suppliers = :new.suppliers;
+
+select sum(total_price)+ :new.total_price
+into v_total_price from (
+select total_price from waybills
+where suppliers = :new.suppliers
+group by wb, total_price
+);
+
+begin
+select * into table_task3_record
+from table_task3
+where suppliers = :new.suppliers;
+
+exception
+when no_data_found then
+supplier_exist := 'n';
+end;
+
+if supplier_exist = 'y' then
+update table_task3
+set hlm_capacity = v_capacity,
+total_price = v_total_price
+where suppliers = :new.suppliers;
+else
+insert into table_task3 (suppliers, hlm_capacity, total_price)
+values (:new.suppliers, v_capacity, v_total_price);
+end if;
+commit;
+
+end;
+/
 
